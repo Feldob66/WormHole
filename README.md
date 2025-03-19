@@ -2,10 +2,10 @@
 A Bondage Club mod that adds teleportation capabilities between and within chat rooms.
 
 ## Installation
-- [Click here to install the script](https://github.com/Feldob66/WormHole/raw/main/Wormhole.user.js)
+- [Click here to install the script](https://github.com/Feldob66/WormHole/raw/main/Wormhole.user.js?_=${Date.now()})
 - Or use this bookmark:
 ```js
-javascript:(()=>{fetch('https://github.com/Feldob66/WormHole/raw/main/Wormhole.user.js').then(r=>r.text()).then(r=>eval(r));})()
+javascript:(()=>{fetch('https://github.com/Feldob66/WormHole/raw/main/Wormhole.user.js?_=' + Date.now()).then(r=>r.text()).then(r=>eval(r));})()
 ```
 
 ## Features
