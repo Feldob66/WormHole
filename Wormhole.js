@@ -886,7 +886,7 @@ function WormholesRun() {
 
 function WormholesClick() {
 	// When the user exits
-	if (MouseIn(1815, 75, 90, 90)) ChatAdminRoomCustomizationExit();
+	if (MouseIn(1815, 75, 90, 90)) WormholesExit();
 }
 
 function WormholesExit() {
