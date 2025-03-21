@@ -14,14 +14,14 @@
 // @grant none
 // @run-at document-end
 // ==/UserScript==
-setTimeout(
-	function () {
-			let n = document.createElement("script");
-			n.setAttribute("language", "JavaScript");
-			n.setAttribute("crossorigin", "anonymous");
-			n.setAttribute("src", "https://github.com/Feldob66/WormHole/Wormhole.js?_=" + Date.now());
-			n.onload = () => n.remove();
-			document.head.appendChild(n);
-	}, 
-        10000
-);
+setTimeout(() => {
+    fetch(`https://raw.githubusercontent.com/Feldob66/WormHole/refs/heads/main/Wormhole.js?${Date.now()}`)
+        .then(response => response.text())
+        .then(scriptText => {
+            let script = document.createElement("script");
+            script.textContent = scriptText;
+            document.head.appendChild(script);
+        })
+        .catch(error => console.error("Failed to load script:", error));
+}, 10000);
+
