@@ -419,7 +419,7 @@ function init() {
             //check all the chat triggers
             if (ChatRoomData.Custom?.WormholeList?.ChatTriggers && Player?.OnlineSharedSettings?.WormholeTriggers?.ChatTriggersTrigger) {
                 const ChatTriggers = ChatRoomData.Custom.WormholeList.ChatTriggers;
-                if (ChatTriggers.length < 1) { return; }
+                if (ChatTriggers.length < 1) { return next(args); }
                 for (let W in ChatTriggers) {
                     if (data.Content.includes(ChatTriggers[W].TriggerWord)) {
                         joinWormhole(ChatTriggers[W].RoomName);
