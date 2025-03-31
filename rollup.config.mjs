@@ -12,7 +12,7 @@ export default {
   input: 'src/main.ts',
   output: {
     name: "Wormhole",
-    file: '../Live/Wormhole/Stable/bundle.js',
+    file: './bundle.js',
     format: 'iife',
     sourcemap: true,
 		banner: `// Wormhole

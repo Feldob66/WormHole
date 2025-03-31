@@ -24,7 +24,7 @@ function initGlobalVars() {
 }
 initGlobalVars();
 
-function WHdebugLog(message) {
+function (message) {
     if (window.WHdebugMode) {
         console.log(message);
     }

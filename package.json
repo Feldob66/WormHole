@@ -13,7 +13,7 @@
 "license": "GPL-2.0",
 "repository": {
 "type": "git",
-"url": "git+https://github.com/sin-1337/Wormhole.git"
+"url": "git+https://github.com/Feldob66/WormHole.git"
 },
 "dependencies": {
 "@types/lz-string": "1.3.34",
