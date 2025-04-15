@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name Wormhole
 // @namespace https://www.bondageprojects.com/
-// @version 0.0.7
+// @version 0.0.8
 // @description Various teleportation functions
 // @author Felix,Sin
 // @match https://bondageprojects.elementfx.com/*
