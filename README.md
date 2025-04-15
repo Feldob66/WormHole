@@ -1,4 +1,4 @@
-# Wormhole (v0.0.7)
+# Wormhole (v0.0.8)
 A Bondage Club mod that adds teleportation capabilities between and within chat rooms.
 
 ## Installation
