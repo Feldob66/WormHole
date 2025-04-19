@@ -520,7 +520,7 @@ function init() {
         WHdebugLog(expandedMapData.WormholeList)
 	    // Stringify and compress the map in a string
 	    let S = JSON.stringify(expandedMapData);
-        debugLog(S)
+        WHdebugLog(S)
 	    S = LZString.compressToBase64(S);
 	    navigator.clipboard.writeText(S);
 	    ChatRoomSendLocal(TextGet("MapCopyDone"));
