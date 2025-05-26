@@ -24,33 +24,33 @@ function initGlobalVars() {
 }
 initGlobalVars();
 
-// Preload PortalImage1
-const PortalImage1 = new Image();
-PortalImage1.src = "https://raw.githubusercontent.com/Feldob66/WormHole/refs/heads/main/Wormholes.png";
-window.PortalImage1 = PortalImage1;
-window.PortalImageReady1 = false;
-PortalImage1.onload = () => window.PortalImageReady1 = true;
+// Preload Backwards Portal Image
+const backwardsPortalImage = new Image();
+backwardsPortalImage.src = "https://raw.githubusercontent.com/Feldob66/WormHole/refs/heads/main/Wormholes.png";
+window.backwardsPortalImage = backwardsPortalImage;
+window.backwardsPortalImageReady = false;
+backwardsPortalImage.onload = () => window.backwardsPortalImageReady = true;
 
-// Preload PortalImage2
-const PortalImage2 = new Image();
-PortalImage2.src = "https://raw.githubusercontent.com/Feldob66/WormHole/refs/heads/main/Wormholes.png"; // Replace this later
-window.PortalImage2 = PortalImage2;
-window.PortalImageReady2 = false;
-PortalImage2.onload = () => window.PortalImageReady2 = true;
+// Preload Starting Portal Image
+const startingPortalImage = new Image();
+startingPortalImage.src = "https://raw.githubusercontent.com/Feldob66/WormHole/refs/heads/main/Wormholes.png";
+window.startingPortalImage = startingPortalImage;
+window.startingPortalImageReady = false;
+startingPortalImage.onload = () => window.startingPortalImageReady = true;
 
-// Preload PortalImage3
-const PortalImage3 = new Image();
-PortalImage3.src = "https://raw.githubusercontent.com/Feldob66/WormHole/refs/heads/main/Wormholes.png"; // Replace this later
-window.PortalImage3 = PortalImage3;
-window.PortalImageReady3 = false;
-PortalImage3.onload = () => window.PortalImageReady3 = true;
+// Preload Target Portal Image
+const targetPortalImage = new Image();
+targetPortalImage.src = "https://raw.githubusercontent.com/Feldob66/WormHole/refs/heads/main/Wormholes.png";
+window.targetPortalImage = targetPortalImage;
+window.targetPortalImageReady = false;
+targetPortalImage.onload = () => window.targetPortalImageReady = true;
 
-// Preload PortalImage4
-const PortalImage4 = new Image();
-PortalImage4.src = "https://raw.githubusercontent.com/Feldob66/WormHole/refs/heads/main/Wormholes.png"; // Replace this later
-window.PortalImage4 = PortalImage4;
-window.PortalImageReady4 = false;
-PortalImage4.onload = () => window.PortalImageReady4 = true;
+// Preload Room Wormhole Image
+const roomWormholeImage = new Image();
+roomWormholeImage.src = "https://raw.githubusercontent.com/Feldob66/WormHole/refs/heads/main/Wormholes.png";
+window.roomWormholeImage = roomWormholeImage;
+window.roomWormholeImageReady = false;
+roomWormholeImage.onload = () => window.roomWormholeImageReady = true;
 
 function WHdebugLog(message) {
     if (window.WHdebugMode) {
@@ -636,7 +636,7 @@ function init() {
         // Always draw the base tile/object image
         DrawImageEx(Source, MainCanvas, X, Y, { Width, Height });
 
-        if (Range > 0 && isRelevant && window.PortalImageReady1) {
+        if (Range > 0 && isRelevant) {
             const PX = Player?.MapData?.Pos?.X;
             const PY = Player?.MapData?.Pos?.Y;
             if (PX != null && PY != null) {
@@ -646,18 +646,31 @@ function init() {
                 const MapX = PX + Math.ceil((X - CenterX) / Width);
                 const MapY = PY + Math.ceil((Y - CenterY) / Height);
 
-                // Check for Coord wormhole or Teleport portals
                 const Wormholes = ChatRoomData?.Custom?.WormholeList;
 
                 if (Wormholes) {
-                    const isCoordPortal = Wormholes?.Coords?.some(w => w.X === MapX && w.Y === MapY);
-                    const isTeleportPortal = Wormholes?.Teleports?.some(w =>
-                        (w.X === MapX && w.Y === MapY) ||                               // Source portal
-                        (w.TargetX === MapX && w.TargetY === MapY && w.backWards)      // Target portal (if backwards-enabled)
+                    // Room Wormhole (Coord)
+                    const isCoordPortal = Wormholes?.Coords?.some(w =>
+                        w.X === MapX && w.Y === MapY
                     );
+                    if (isCoordPortal && window.roomWormholeImageReady) {
+                        DrawImageEx(window.roomWormholeImage, MainCanvas, X, Y, { Width, Height });
+                    }
 
-                    if (isCoordPortal || isTeleportPortal) {
-                        DrawImageEx(window.PortalImage1, MainCanvas, X, Y, { Width, Height });
+                    // Teleports (source/target)
+                    for (const w of Wormholes?.Teleports || []) {
+                        const isStart = w.X === MapX && w.Y === MapY;
+                        const isTarget = w.TargetX === MapX && w.TargetY === MapY;
+
+                        if (isStart && window.startingPortalImageReady) {
+                            DrawImageEx(window.startingPortalImage, MainCanvas, X, Y, { Width, Height });
+                        }
+
+                        if (isTarget && w.backWards && window.backwardsPortalImageReady) {
+                            DrawImageEx(window.backwardsPortalImage, MainCanvas, X, Y, { Width, Height });
+                        } else if (isTarget && !w.backWards && window.targetPortalImageReady) {
+                            DrawImageEx(window.targetPortalImage, MainCanvas, X, Y, { Width, Height });
+                        }
                     }
                 }
             }
@@ -665,6 +678,7 @@ function init() {
 
         // No need to call next(), since we drew the tile image ourselves already
     });
+
 
     //command for registering a coordinate wormhole
     CommandCombine([{
