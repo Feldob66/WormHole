@@ -24,6 +24,34 @@ function initGlobalVars() {
 }
 initGlobalVars();
 
+// Preload PortalImage1
+const PortalImage1 = new Image();
+PortalImage1.src = "https://raw.githubusercontent.com/Feldob66/WormHole/refs/heads/main/Wormholes.png";
+window.PortalImage1 = PortalImage1;
+window.PortalImageReady1 = false;
+PortalImage1.onload = () => window.PortalImageReady1 = true;
+
+// Preload PortalImage2
+const PortalImage2 = new Image();
+PortalImage2.src = "https://raw.githubusercontent.com/Feldob66/WormHole/refs/heads/main/Wormholes.png"; // Replace this later
+window.PortalImage2 = PortalImage2;
+window.PortalImageReady2 = false;
+PortalImage2.onload = () => window.PortalImageReady2 = true;
+
+// Preload PortalImage3
+const PortalImage3 = new Image();
+PortalImage3.src = "https://raw.githubusercontent.com/Feldob66/WormHole/refs/heads/main/Wormholes.png"; // Replace this later
+window.PortalImage3 = PortalImage3;
+window.PortalImageReady3 = false;
+PortalImage3.onload = () => window.PortalImageReady3 = true;
+
+// Preload PortalImage4
+const PortalImage4 = new Image();
+PortalImage4.src = "https://raw.githubusercontent.com/Feldob66/WormHole/refs/heads/main/Wormholes.png"; // Replace this later
+window.PortalImage4 = PortalImage4;
+window.PortalImageReady4 = false;
+PortalImage4.onload = () => window.PortalImageReady4 = true;
+
 function WHdebugLog(message) {
     if (window.WHdebugMode) {
         console.log(message);
@@ -585,7 +613,58 @@ function init() {
 	    ChatRoomMapViewCalculatePerceptionMasks();
 	    ChatRoomSendLocal(TextGet("MapPasteDone"));
     });
-    //#9 Map prettify | Draw portal image over Coord or Teleport wormholes | future plans...
+    //#9 Map prettify | Draw portal image over Coord or Teleport wormholes
+    WH_API.hookFunction("DrawImageResize", 5, (args, next) => {
+        const [Source, X, Y, Width, Height] = args;
+        const Range = ChatRoomMapViewPerceptionRange;
+
+        let SourcePath = "";
+        if (typeof Source === "string") {
+            SourcePath = Source;
+        } else if (Source instanceof HTMLImageElement && typeof Source.src === "string") {
+            SourcePath = Source.src;
+        }
+
+        if (SourcePath.startsWith(window.location.origin))
+            SourcePath = SourcePath.replace(window.location.origin + "/", "");
+
+        const isRelevant =
+            SourcePath.includes("Screens/Online/ChatRoom/MapObject/") ||
+            (SourcePath.includes("Screens/Online/ChatRoom/MapTile/") &&
+                !SourcePath.includes("Screens/Online/ChatRoom/MapTile/WallEffect/"));
+
+        // Always draw the base tile/object image
+        DrawImageEx(Source, MainCanvas, X, Y, { Width, Height });
+
+        if (Range > 0 && isRelevant && window.PortalImageReady1) {
+            const PX = Player?.MapData?.Pos?.X;
+            const PY = Player?.MapData?.Pos?.Y;
+            if (PX != null && PY != null) {
+                const CenterX = Range * Width;
+                const CenterY = Range * Height;
+
+                const MapX = PX + Math.ceil((X - CenterX) / Width);
+                const MapY = PY + Math.ceil((Y - CenterY) / Height);
+
+                // Check for Coord wormhole or Teleport portals
+                const Wormholes = ChatRoomData?.Custom?.WormholeList;
+
+                if (Wormholes) {
+                    const isCoordPortal = Wormholes?.Coords?.some(w => w.X === MapX && w.Y === MapY);
+                    const isTeleportPortal = Wormholes?.Teleports?.some(w =>
+                        (w.X === MapX && w.Y === MapY) ||                               // Source portal
+                        (w.TargetX === MapX && w.TargetY === MapY && w.backWards)      // Target portal (if backwards-enabled)
+                    );
+
+                    if (isCoordPortal || isTeleportPortal) {
+                        DrawImageEx(window.PortalImage1, MainCanvas, X, Y, { Width, Height });
+                    }
+                }
+            }
+        }
+
+        // No need to call next(), since we drew the tile image ourselves already
+    });
 
     //command for registering a coordinate wormhole
     CommandCombine([{
