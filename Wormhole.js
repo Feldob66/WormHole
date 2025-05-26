@@ -633,10 +633,7 @@ function init() {
             (SourcePath.includes("Screens/Online/ChatRoom/MapTile/") &&
                 !SourcePath.includes("Screens/Online/ChatRoom/MapTile/WallEffect/"));
 
-        // Always draw the base tile/object image
-        DrawImageEx(Source, MainCanvas, X, Y, { Width, Height });
-
-        if (Range > 0 && isRelevant && window.PortalImageReady1) {
+        if (Range > 0 && isRelevant) {
             const PX = Player?.MapData?.Pos?.X;
             const PY = Player?.MapData?.Pos?.Y;
             if (PX != null && PY != null) {
@@ -646,24 +643,45 @@ function init() {
                 const MapX = PX + Math.ceil((X - CenterX) / Width);
                 const MapY = PY + Math.ceil((Y - CenterY) / Height);
 
-                // Check for Coord wormhole or Teleport portals
-                const Wormholes = ChatRoomData?.Custom?.WormholeList;
+                if (
+                    MapX >= 0 && MapX < ChatRoomMapViewWidth &&
+                    MapY >= 0 && MapY < ChatRoomMapViewHeight &&
+                    ChatRoomData.MapData?.Tiles.length === ChatRoomMapViewWidth * ChatRoomMapViewHeight
+                ) {
+                    const index = ChatRoomMapViewCoordinatesToIndex(MapX, MapY);
+                    const tileChar = ChatRoomData.MapData.Tiles.charCodeAt(index);
+                    const tile = ChatRoomMapViewTileList.find(t => t.ID === tileChar);
 
-                if (Wormholes) {
-                    const isCoordPortal = Wormholes?.Coords?.some(w => w.X === MapX && w.Y === MapY);
-                    const isTeleportPortal = Wormholes?.Teleports?.some(w =>
-                        (w.X === MapX && w.Y === MapY) ||                               // Source portal
-                        (w.TargetX === MapX && w.TargetY === MapY && w.backWards)      // Target portal (if backwards-enabled)
+                    DrawImageEx(Source, MainCanvas, X, Y, { Width, Height });
+
+                    const Wormholes = ChatRoomData.Custom?.WormholeList;
+
+                    const isCoordPortal = Wormholes?.Coords?.some(w =>
+                        w.X === MapX && w.Y === MapY
                     );
 
-                    if (isCoordPortal || isTeleportPortal) {
-                        DrawImageEx(window.PortalImage1, MainCanvas, X, Y, { Width, Height });
+                    const isTeleportPortal = Wormholes?.Teleports?.some(w =>
+                        (w.X === MapX && w.Y === MapY) ||                             // Always draw at source
+                        (w.TargetX === MapX && w.TargetY === MapY)                   // Always draw at target
+                    );
+
+                    if (
+                        (tile?.Style && SourcePath.includes(tile.Style)) || 
+                        isCoordPortal || 
+                        isTeleportPortal
+                    ) {
+                        if (window.PortalImageReady1) {
+                            DrawImageEx(window.PortalImage1, MainCanvas, X, Y, { Width, Height });
+                        }
                     }
+
+                    return;
                 }
             }
         }
 
-        // No need to call next(), since we drew the tile image ourselves already
+        // Fallback to original behavior
+        return next(args);
     });
 
     //command for registering a coordinate wormhole
