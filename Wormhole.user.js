@@ -15,7 +15,7 @@
 // @run-at document-end
 // ==/UserScript==
 setTimeout(() => {
-    fetch(`https://raw.githubusercontent.com/Feldob66/WormHole/refs/heads/main/Wormhole.js?${Date.now()}`)
+    fetch(`https://raw.githubusercontent.com/Feldob66/WormHole/refs/heads/Beta-(testing)/Wormhole.js?${Date.now()}`)
         .then(response => response.text())
         .then(scriptText => {
             let script = document.createElement("script");
