@@ -615,78 +615,81 @@ function init() {
     });
     //#9 Map prettify | Draw portal image over Coord or Teleport wormholes
     WH_API.hookFunction("DrawImageResize", 5, (args, next) => {
-        const [Source, X, Y, Width, Height] = args;
-        const Range = ChatRoomMapViewPerceptionRange;
+    const [Source, X, Y, Width, Height] = args;
+    const Range = ChatRoomMapViewPerceptionRange;
 
-        let SourcePath = "";
-        if (typeof Source === "string") {
-            SourcePath = Source;
-        } else if (Source instanceof HTMLImageElement && typeof Source.src === "string") {
-            SourcePath = Source.src;
+    let SourcePath = "";
+    if (typeof Source === "string") {
+        SourcePath = Source;
+    } else if (Source instanceof HTMLImageElement && typeof Source.src === "string") {
+        SourcePath = Source.src;
+    }
+
+    if (SourcePath.startsWith(window.location.origin))
+        SourcePath = SourcePath.replace(window.location.origin + "/", "");
+
+    const isRelevant =
+        SourcePath.includes("Screens/Online/ChatRoom/MapObject/") ||
+        (SourcePath.includes("Screens/Online/ChatRoom/MapTile/") &&
+            !SourcePath.includes("Screens/Online/ChatRoom/MapTile/WallEffect/"));
+
+    // Always draw the base tile/object image
+    DrawImageEx(Source, MainCanvas, X, Y, { Width, Height });
+
+    // Ignore stretched tiles (not 1:1 ratio)
+    if (Width !== Height) return;
+
+    if (!isRelevant || Range <= 0) return;
+
+    const PX = Player?.MapData?.Pos?.X;
+    const PY = Player?.MapData?.Pos?.Y;
+    if (PX == null || PY == null) return;
+
+    const Wormholes = ChatRoomData?.Custom?.WormholeList;
+    if (!Wormholes) return;
+
+    // Helper to compare positions with tolerance (to avoid rounding mismatches)
+    const positionsMatch = (a, b) => Math.abs(a - b) < 1;
+
+    // Tile size variables
+    const tileW = Width;
+    const tileH = Height;
+
+    // Replicate tile drawing positioning exactly:
+    // ScreenX = (tileX - PX) * tileW + Range * tileW
+    // ScreenY = (tileY - PY) * tileH + Range * tileW  <-- note tileW here (not tileH)
+
+    const tileToScreenMatches = (tileX, tileY) => {
+        const screenX = (tileX - PX) * tileW + Range * tileW;
+        const screenY = (tileY - PY) * tileH + Range * tileW;  // critical fix here
+
+        return positionsMatch(screenX, X) && positionsMatch(screenY, Y);
+    };
+
+    // Room wormhole tiles
+    for (const w of Wormholes?.Coords || []) {
+        if (tileToScreenMatches(w.X, w.Y) && window.roomWormholeImageReady) {
+            DrawImageEx(window.roomWormholeImage, MainCanvas, X, Y, { Width, Height });
+        }
+    }
+
+    // Teleport portals
+    for (const w of Wormholes?.Teleports || []) {
+        if (tileToScreenMatches(w.X, w.Y) && window.startingPortalImageReady) {
+            DrawImageEx(window.startingPortalImage, MainCanvas, X, Y, { Width, Height });
         }
 
-        if (SourcePath.startsWith(window.location.origin))
-            SourcePath = SourcePath.replace(window.location.origin + "/", "");
-
-        const isRelevant =
-            SourcePath.includes("Screens/Online/ChatRoom/MapObject/") ||
-            (SourcePath.includes("Screens/Online/ChatRoom/MapTile/") &&
-                !SourcePath.includes("Screens/Online/ChatRoom/MapTile/WallEffect/"));
-
-        // Always draw the base tile/object image
-        DrawImageEx(Source, MainCanvas, X, Y, { Width, Height });
-
-        // 🚫 Ignore stretched tiles (not 1:1)
-        if (Width !== Height) return;
-
-        if (!isRelevant || Range <= 0) return;
-
-        const PX = Player?.MapData?.Pos?.X;
-        const PY = Player?.MapData?.Pos?.Y;
-        if (PX == null || PY == null) return;
-
-        const Wormholes = ChatRoomData?.Custom?.WormholeList;
-        if (!Wormholes) return;
-
-        // Helper to compare positions with tolerance (to avoid rounding mismatches)
-        const positionsMatch = (a, b) => Math.abs(a - b) < 1;
-
-        // Recalculate screen coords from tile coords using corrected logic
-        const tileToScreenMatches = (tileX, tileY) => {
-            const tileW = Width;
-            const tileH = Height;
-            const screenX = (tileX - PX) * tileW + Range * tileW;
-            // FIXED: Use tileH here, not tileW
-            const screenY = (tileY - PY) * tileH + Range * tileH;
-
-            // Compare with incoming X/Y args with tolerance
-            return positionsMatch(screenX, X) && positionsMatch(screenY, Y);
-        };
-
-        // Room wormhole tiles
-        for (const w of Wormholes?.Coords || []) {
-            if (tileToScreenMatches(w.X, w.Y) && window.roomWormholeImageReady) {
-                DrawImageEx(window.roomWormholeImage, MainCanvas, X, Y, { Width, Height });
+        if (tileToScreenMatches(w.TargetX, w.TargetY)) {
+            if (w.backWards && window.backwardsPortalImageReady) {
+                DrawImageEx(window.backwardsPortalImage, MainCanvas, X, Y, { Width, Height });
+            } else if (!w.backWards && window.targetPortalImageReady) {
+                DrawImageEx(window.targetPortalImage, MainCanvas, X, Y, { Width, Height });
             }
         }
+    }
 
-        // Teleport portals
-        for (const w of Wormholes?.Teleports || []) {
-            if (tileToScreenMatches(w.X, w.Y) && window.startingPortalImageReady) {
-                DrawImageEx(window.startingPortalImage, MainCanvas, X, Y, { Width, Height });
-            }
-
-            if (tileToScreenMatches(w.TargetX, w.TargetY)) {
-                if (w.backWards && window.backwardsPortalImageReady) {
-                    DrawImageEx(window.backwardsPortalImage, MainCanvas, X, Y, { Width, Height });
-                } else if (!w.backWards && window.targetPortalImageReady) {
-                    DrawImageEx(window.targetPortalImage, MainCanvas, X, Y, { Width, Height });
-                }
-            }
-        }
-
-        // No need to call next(), we already drew the tile
-    });
+    // No call to next() needed here, since you already drew tile + overlays
+});
 
 
     //command for registering a coordinate wormhole
