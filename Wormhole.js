@@ -636,39 +636,41 @@ function init() {
         // Always draw the base tile/object image
         DrawImageEx(Source, MainCanvas, X, Y, { Width, Height });
 
+        // 🚫 Ignore stretched images (not 1:1 ratio) to avoid distorted portal overlays
+        if (Width !== Height) return;
+
         if (Range > 0 && isRelevant) {
             const PX = Player?.MapData?.Pos?.X;
             const PY = Player?.MapData?.Pos?.Y;
             if (PX != null && PY != null) {
-                // 🧠 Calculate the map coordinate being drawn based on canvas position
                 const CenterOffsetX = Range * Width;
                 const CenterOffsetY = Range * Height;
+
                 const MapX = PX + Math.ceil((X - CenterOffsetX) / Width);
                 const MapY = PY + Math.ceil((Y - CenterOffsetY) / Height);
 
                 const Wormholes = ChatRoomData?.Custom?.WormholeList;
+                if (!Wormholes) return;
 
-                if (Wormholes) {
-                    // Room Wormhole (Coord)
-                    if (
-                        Wormholes?.Coords?.some(w => w.X === MapX && w.Y === MapY) &&
-                        window.roomWormholeImageReady
-                    ) {
-                        DrawImageEx(window.roomWormholeImage, MainCanvas, X, Y, { Width, Height });
+                // Room Wormhole (Coord)
+                if (
+                    Wormholes?.Coords?.some(w => w.X === MapX && w.Y === MapY) &&
+                    window.roomWormholeImageReady
+                ) {
+                    DrawImageEx(window.roomWormholeImage, MainCanvas, X, Y, { Width, Height });
+                }
+
+                // Teleports (source/target)
+                for (const w of Wormholes?.Teleports || []) {
+                    if (w.X === MapX && w.Y === MapY && window.startingPortalImageReady) {
+                        DrawImageEx(window.startingPortalImage, MainCanvas, X, Y, { Width, Height });
                     }
 
-                    // Teleports (source/target)
-                    for (const w of Wormholes?.Teleports || []) {
-                        if (w.X === MapX && w.Y === MapY && window.startingPortalImageReady) {
-                            DrawImageEx(window.startingPortalImage, MainCanvas, X, Y, { Width, Height });
-                        }
-
-                        if (w.TargetX === MapX && w.TargetY === MapY) {
-                            if (w.backWards && window.backwardsPortalImageReady) {
-                                DrawImageEx(window.backwardsPortalImage, MainCanvas, X, Y, { Width, Height });
-                            } else if (!w.backWards && window.targetPortalImageReady) {
-                                DrawImageEx(window.targetPortalImage, MainCanvas, X, Y, { Width, Height });
-                            }
+                    if (w.TargetX === MapX && w.TargetY === MapY) {
+                        if (w.backWards && window.backwardsPortalImageReady) {
+                            DrawImageEx(window.backwardsPortalImage, MainCanvas, X, Y, { Width, Height });
+                        } else if (!w.backWards && window.targetPortalImageReady) {
+                            DrawImageEx(window.targetPortalImage, MainCanvas, X, Y, { Width, Height });
                         }
                     }
                 }
