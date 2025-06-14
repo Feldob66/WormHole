@@ -24,6 +24,34 @@ function initGlobalVars() {
 }
 initGlobalVars();
 
+// Preload Backwards Portal Image
+const backwardsPortalImage = new Image();
+backwardsPortalImage.src = "https://raw.githubusercontent.com/Feldob66/WormHole/refs/heads/main/Wormholes.png";
+window.backwardsPortalImage = backwardsPortalImage;
+window.backwardsPortalImageReady = false;
+backwardsPortalImage.onload = () => window.backwardsPortalImageReady = true;
+
+// Preload Starting Portal Image
+const startingPortalImage = new Image();
+startingPortalImage.src = "https://raw.githubusercontent.com/Feldob66/WormHole/refs/heads/main/Wormholes.png";
+window.startingPortalImage = startingPortalImage;
+window.startingPortalImageReady = false;
+startingPortalImage.onload = () => window.startingPortalImageReady = true;
+
+// Preload Target Portal Image
+const targetPortalImage = new Image();
+targetPortalImage.src = "https://raw.githubusercontent.com/Feldob66/WormHole/refs/heads/main/Wormholes.png";
+window.targetPortalImage = targetPortalImage;
+window.targetPortalImageReady = false;
+targetPortalImage.onload = () => window.targetPortalImageReady = true;
+
+// Preload Room Wormhole Image
+const roomWormholeImage = new Image();
+roomWormholeImage.src = "https://raw.githubusercontent.com/Feldob66/WormHole/refs/heads/main/Wormholes.png";
+window.roomWormholeImage = roomWormholeImage;
+window.roomWormholeImageReady = false;
+roomWormholeImage.onload = () => window.roomWormholeImageReady = true;
+
 function WHdebugLog(message) {
     if (window.WHdebugMode) {
         console.log(message);
@@ -585,7 +613,73 @@ function init() {
 	    ChatRoomMapViewCalculatePerceptionMasks();
 	    ChatRoomSendLocal(TextGet("MapPasteDone"));
     });
-    //#9 Map prettify | Draw portal image over Coord or Teleport wormholes | future plans...
+    //#9 Map prettify | Draw portal image over Coord or Teleport wormholes
+    WH_API.hookFunction("DrawImageResize", 5, (args, next) => {
+        const [Source, X, Y, Width, Height] = args;
+        const Range = ChatRoomMapViewPerceptionRange;
+
+        let SourcePath = "";
+        if (typeof Source === "string") {
+            SourcePath = Source;
+        } else if (Source instanceof HTMLImageElement && typeof Source.src === "string") {
+            SourcePath = Source.src;
+        }
+
+        if (SourcePath.startsWith(window.location.origin))
+            SourcePath = SourcePath.replace(window.location.origin + "/", "");
+
+        const isRelevant =
+            SourcePath.includes("Screens/Online/ChatRoom/MapObject/") ||
+            (SourcePath.includes("Screens/Online/ChatRoom/MapTile/") &&
+                !SourcePath.includes("Screens/Online/ChatRoom/MapTile/WallEffect/"));
+
+        // Always draw the base tile/object image
+        DrawImageEx(Source, MainCanvas, X, Y, { Width, Height });
+
+        // 🚫 Ignore stretched images (not 1:1 ratio) to avoid distorted portal overlays
+        if (Width !== Height) return;
+
+        if (Range > 0 && isRelevant) {
+            const PX = Player?.MapData?.Pos?.X;
+            const PY = Player?.MapData?.Pos?.Y;
+            if (PX != null && PY != null) {
+                const CenterOffsetX = Range * Width;
+                const CenterOffsetY = Range * Height;
+
+                const MapX = PX + Math.ceil((X - CenterOffsetX) / Width);
+                const MapY = PY + Math.ceil((Y - CenterOffsetY) / Height);
+
+                const Wormholes = ChatRoomData?.Custom?.WormholeList;
+                if (!Wormholes) return;
+
+                // Room Wormhole (Coord)
+                if (
+                    Wormholes?.Coords?.some(w => w.X === MapX && w.Y === MapY) &&
+                    window.roomWormholeImageReady
+                ) {
+                    DrawImageEx(window.roomWormholeImage, MainCanvas, X, Y, { Width, Height });
+                }
+
+                // Teleports (source/target)
+                for (const w of Wormholes?.Teleports || []) {
+                    if (w.X === MapX && w.Y === MapY && window.startingPortalImageReady) {
+                        DrawImageEx(window.startingPortalImage, MainCanvas, X, Y, { Width, Height });
+                    }
+
+                    if (w.TargetX === MapX && w.TargetY === MapY) {
+                        if (w.backWards && window.backwardsPortalImageReady) {
+                            DrawImageEx(window.backwardsPortalImage, MainCanvas, X, Y, { Width, Height });
+                        } else if (!w.backWards && window.targetPortalImageReady) {
+                            DrawImageEx(window.targetPortalImage, MainCanvas, X, Y, { Width, Height });
+                        }
+                    }
+                }
+            }
+        }
+
+        // No need to call next(), since we drew the tile image ourselves already
+    });
+
 
     //command for registering a coordinate wormhole
     CommandCombine([{
