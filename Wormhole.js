@@ -645,21 +645,19 @@ function init() {
                 const CenterOffsetX = Range * Width;
                 const CenterOffsetY = Range * Height;
 
-                // Check helper
+                // NEW: Use same logic as original DrawImageResize hook
                 const matchesDrawPos = (MapX, MapY) => {
-                    const screenX = (MapX - PX) * Width + CenterOffsetX;
-                    const screenY = (MapY - PY) * Height + CenterOffsetY;
-                    return screenX === X && screenY === Y;
+                    const calcX = PX + Math.ceil((X - CenterOffsetX) / Width);
+                    const calcY = PY + Math.ceil((Y - CenterOffsetY) / Height);
+                    return calcX === MapX && calcY === MapY;
                 };
 
-                // Room Wormhole (Coord)
                 for (const w of Wormholes?.Coords || []) {
                     if (matchesDrawPos(w.X, w.Y) && window.roomWormholeImageReady) {
                         DrawImageEx(window.roomWormholeImage, MainCanvas, X, Y, { Width, Height });
                     }
                 }
 
-                // Teleport Portals
                 for (const w of Wormholes?.Teleports || []) {
                     if (matchesDrawPos(w.X, w.Y) && window.startingPortalImageReady) {
                         DrawImageEx(window.startingPortalImage, MainCanvas, X, Y, { Width, Height });
@@ -678,6 +676,7 @@ function init() {
 
         // No need to call next(), since we drew the tile image ourselves already
     });
+
 
 
 
