@@ -648,15 +648,19 @@ function init() {
         const Wormholes = ChatRoomData?.Custom?.WormholeList;
         if (!Wormholes) return;
 
-        // Recalculate screen coords from tile coords using *exact same logic* as tile renderer
+        // Helper to compare positions with tolerance (to avoid rounding mismatches)
+        const positionsMatch = (a, b) => Math.abs(a - b) < 1;
+
+        // Recalculate screen coords from tile coords using corrected logic
         const tileToScreenMatches = (tileX, tileY) => {
             const tileW = Width;
             const tileH = Height;
             const screenX = (tileX - PX) * tileW + Range * tileW;
-            const screenY = (tileY - PY) * tileH + Range * tileW;
-            const drawX = Math.floor(screenX);
-            const drawY = Math.floor(screenY);
-            return drawX === X && drawY === Y;
+            // FIXED: Use tileH here, not tileW
+            const screenY = (tileY - PY) * tileH + Range * tileH;
+
+            // Compare with incoming X/Y args with tolerance
+            return positionsMatch(screenX, X) && positionsMatch(screenY, Y);
         };
 
         // Room wormhole tiles
@@ -683,6 +687,7 @@ function init() {
 
         // No need to call next(), we already drew the tile
     });
+
 
     //command for registering a coordinate wormhole
     CommandCombine([{
