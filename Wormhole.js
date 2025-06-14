@@ -615,81 +615,70 @@ function init() {
     });
     //#9 Map prettify | Draw portal image over Coord or Teleport wormholes
     WH_API.hookFunction("DrawImageResize", 5, (args, next) => {
-    const [Source, X, Y, Width, Height] = args;
-    const Range = ChatRoomMapViewPerceptionRange;
+        const [Source, X, Y, Width, Height] = args;
+        const Range = ChatRoomMapViewPerceptionRange;
 
-    let SourcePath = "";
-    if (typeof Source === "string") {
-        SourcePath = Source;
-    } else if (Source instanceof HTMLImageElement && typeof Source.src === "string") {
-        SourcePath = Source.src;
-    }
-
-    if (SourcePath.startsWith(window.location.origin))
-        SourcePath = SourcePath.replace(window.location.origin + "/", "");
-
-    const isRelevant =
-        SourcePath.includes("Screens/Online/ChatRoom/MapObject/") ||
-        (SourcePath.includes("Screens/Online/ChatRoom/MapTile/") &&
-            !SourcePath.includes("Screens/Online/ChatRoom/MapTile/WallEffect/"));
-
-    // Always draw the base tile/object image
-    DrawImageEx(Source, MainCanvas, X, Y, { Width, Height });
-
-    // Ignore stretched tiles (not 1:1 ratio)
-    if (Width !== Height) return;
-
-    if (!isRelevant || Range <= 0) return;
-
-    const PX = Player?.MapData?.Pos?.X;
-    const PY = Player?.MapData?.Pos?.Y;
-    if (PX == null || PY == null) return;
-
-    const Wormholes = ChatRoomData?.Custom?.WormholeList;
-    if (!Wormholes) return;
-
-    // Helper to compare positions with tolerance (to avoid rounding mismatches)
-    const positionsMatch = (a, b) => Math.abs(a - b) < 1;
-
-    // Tile size variables
-    const tileW = Width;
-    const tileH = Height;
-
-    // Replicate tile drawing positioning exactly:
-    // ScreenX = (tileX - PX) * tileW + Range * tileW
-    // ScreenY = (tileY - PY) * tileH + Range * tileW  <-- note tileW here (not tileH)
-
-    const tileToScreenMatches = (tileX, tileY) => {
-        const screenX = (tileX - PX) * tileW + Range * tileW;
-        const screenY = (tileY - PY) * tileH + Range * tileW;  // critical fix here
-
-        return positionsMatch(screenX, X) && positionsMatch(screenY, Y);
-    };
-
-    // Room wormhole tiles
-    for (const w of Wormholes?.Coords || []) {
-        if (tileToScreenMatches(w.X, w.Y) && window.roomWormholeImageReady) {
-            DrawImageEx(window.roomWormholeImage, MainCanvas, X, Y, { Width, Height });
-        }
-    }
-
-    // Teleport portals
-    for (const w of Wormholes?.Teleports || []) {
-        if (tileToScreenMatches(w.X, w.Y) && window.startingPortalImageReady) {
-            DrawImageEx(window.startingPortalImage, MainCanvas, X, Y, { Width, Height });
+        let SourcePath = "";
+        if (typeof Source === "string") {
+            SourcePath = Source;
+        } else if (Source instanceof HTMLImageElement && typeof Source.src === "string") {
+            SourcePath = Source.src;
         }
 
-        if (tileToScreenMatches(w.TargetX, w.TargetY)) {
-            if (w.backWards && window.backwardsPortalImageReady) {
-                DrawImageEx(window.backwardsPortalImage, MainCanvas, X, Y, { Width, Height });
-            } else if (!w.backWards && window.targetPortalImageReady) {
-                DrawImageEx(window.targetPortalImage, MainCanvas, X, Y, { Width, Height });
+        if (SourcePath.startsWith(window.location.origin))
+            SourcePath = SourcePath.replace(window.location.origin + "/", "");
+
+        const isRelevant =
+            SourcePath.includes("Screens/Online/ChatRoom/MapObject/") ||
+            (SourcePath.includes("Screens/Online/ChatRoom/MapTile/") &&
+                !SourcePath.includes("Screens/Online/ChatRoom/MapTile/WallEffect/"));
+
+        // Always draw the base tile/object image
+        DrawImageEx(Source, MainCanvas, X, Y, { Width, Height });
+
+        // 🚫 Ignore stretched images (not 1:1 ratio) to avoid distorted portal overlays
+        if (Width !== Height) return;
+
+        if (Range > 0 && isRelevant) {
+            const PX = Player?.MapData?.Pos?.X;
+            const PY = Player?.MapData?.Pos?.Y;
+            if (PX != null && PY != null) {
+                const CenterOffsetX = Range * Width;
+                const CenterOffsetY = Range * Height;
+
+                const MapX = PX + Math.ceil((X - CenterOffsetX) / Width);
+                const MapY = PY + Math.ceil((Y - CenterOffsetY) / Height);
+
+                const Wormholes = ChatRoomData?.Custom?.WormholeList;
+                if (!Wormholes) return;
+
+                // Room Wormhole (Coord)
+                if (
+                    Wormholes?.Coords?.some(w => w.X === MapX && w.Y === MapY) &&
+                    window.roomWormholeImageReady
+                ) {
+                    DrawImageEx(window.roomWormholeImage, MainCanvas, X, Y, { Width, Height });
+                }
+
+                // Teleports (source/target)
+                for (const w of Wormholes?.Teleports || []) {
+                    if (w.X === MapX && w.Y === MapY && window.startingPortalImageReady) {
+                        DrawImageEx(window.startingPortalImage, MainCanvas, X, Y, { Width, Height });
+                    }
+
+                    if (w.TargetX === MapX && w.TargetY === MapY) {
+                        if (w.backWards && window.backwardsPortalImageReady) {
+                            DrawImageEx(window.backwardsPortalImage, MainCanvas, X, Y, { Width, Height });
+                        } else if (!w.backWards && window.targetPortalImageReady) {
+                            DrawImageEx(window.targetPortalImage, MainCanvas, X, Y, { Width, Height });
+                        }
+                    }
+                }
             }
         }
-    }
 
-    // No call to next() needed here, since you already drew tile + overlays
-});
+        // No need to call next(), since we drew the tile image ourselves already
+    });
 
 
     //command for registering a coordinate wormhole
