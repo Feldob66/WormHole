@@ -639,35 +639,36 @@ function init() {
         if (Range > 0 && isRelevant) {
             const PX = Player?.MapData?.Pos?.X;
             const PY = Player?.MapData?.Pos?.Y;
-            const Wormholes = ChatRoomData?.Custom?.WormholeList;
-
-            if (PX != null && PY != null && Wormholes) {
+            if (PX != null && PY != null) {
+                // 🧠 Calculate the map coordinate being drawn based on canvas position
                 const CenterOffsetX = Range * Width;
                 const CenterOffsetY = Range * Height;
+                const MapX = PX + Math.ceil((X - CenterOffsetX) / Width);
+                const MapY = PY + Math.ceil((Y - CenterOffsetY) / Height);
 
-                // NEW: Use same logic as original DrawImageResize hook
-                const matchesDrawPos = (MapX, MapY) => {
-                    const calcX = PX + Math.ceil((X - CenterOffsetX) / Width);
-                    const calcY = PY + Math.ceil((Y - CenterOffsetY) / Height);
-                    return calcX === MapX && calcY === MapY;
-                };
+                const Wormholes = ChatRoomData?.Custom?.WormholeList;
 
-                for (const w of Wormholes?.Coords || []) {
-                    if (matchesDrawPos(w.X, w.Y) && window.roomWormholeImageReady) {
+                if (Wormholes) {
+                    // Room Wormhole (Coord)
+                    if (
+                        Wormholes?.Coords?.some(w => w.X === MapX && w.Y === MapY) &&
+                        window.roomWormholeImageReady
+                    ) {
                         DrawImageEx(window.roomWormholeImage, MainCanvas, X, Y, { Width, Height });
                     }
-                }
 
-                for (const w of Wormholes?.Teleports || []) {
-                    if (matchesDrawPos(w.X, w.Y) && window.startingPortalImageReady) {
-                        DrawImageEx(window.startingPortalImage, MainCanvas, X, Y, { Width, Height });
-                    }
+                    // Teleports (source/target)
+                    for (const w of Wormholes?.Teleports || []) {
+                        if (w.X === MapX && w.Y === MapY && window.startingPortalImageReady) {
+                            DrawImageEx(window.startingPortalImage, MainCanvas, X, Y, { Width, Height });
+                        }
 
-                    if (matchesDrawPos(w.TargetX, w.TargetY)) {
-                        if (w.backWards && window.backwardsPortalImageReady) {
-                            DrawImageEx(window.backwardsPortalImage, MainCanvas, X, Y, { Width, Height });
-                        } else if (!w.backWards && window.targetPortalImageReady) {
-                            DrawImageEx(window.targetPortalImage, MainCanvas, X, Y, { Width, Height });
+                        if (w.TargetX === MapX && w.TargetY === MapY) {
+                            if (w.backWards && window.backwardsPortalImageReady) {
+                                DrawImageEx(window.backwardsPortalImage, MainCanvas, X, Y, { Width, Height });
+                            } else if (!w.backWards && window.targetPortalImageReady) {
+                                DrawImageEx(window.targetPortalImage, MainCanvas, X, Y, { Width, Height });
+                            }
                         }
                     }
                 }
@@ -676,9 +677,6 @@ function init() {
 
         // No need to call next(), since we drew the tile image ourselves already
     });
-
-
-
 
     //command for registering a coordinate wormhole
     CommandCombine([{
