@@ -636,48 +636,52 @@ function init() {
         // Always draw the base tile/object image
         DrawImageEx(Source, MainCanvas, X, Y, { Width, Height });
 
-        // 🚫 Ignore stretched images (not 1:1 ratio) to avoid distorted portal overlays
+        // 🚫 Ignore stretched tiles (not 1:1)
         if (Width !== Height) return;
 
-        if (Range > 0 && isRelevant) {
-            const PX = Player?.MapData?.Pos?.X;
-            const PY = Player?.MapData?.Pos?.Y;
-            if (PX != null && PY != null) {
-                const CenterOffsetX = Range * Width;
-                const CenterOffsetY = Range * Height;
+        if (!isRelevant || Range <= 0) return;
 
-                const MapX = PX + Math.ceil((X - CenterOffsetX) / Width);
-                const MapY = PY + Math.ceil((Y - CenterOffsetY) / Height);
+        const PX = Player?.MapData?.Pos?.X;
+        const PY = Player?.MapData?.Pos?.Y;
+        if (PX == null || PY == null) return;
 
-                const Wormholes = ChatRoomData?.Custom?.WormholeList;
-                if (!Wormholes) return;
+        const Wormholes = ChatRoomData?.Custom?.WormholeList;
+        if (!Wormholes) return;
 
-                // Room Wormhole (Coord)
-                if (
-                    Wormholes?.Coords?.some(w => w.X === MapX && w.Y === MapY) &&
-                    window.roomWormholeImageReady
-                ) {
-                    DrawImageEx(window.roomWormholeImage, MainCanvas, X, Y, { Width, Height });
-                }
+        // Recalculate screen coords from tile coords using *exact same logic* as tile renderer
+        const tileToScreenMatches = (tileX, tileY) => {
+            const tileW = Width;
+            const tileH = Height;
+            const screenX = (tileX - PX) * tileW + Range * tileW;
+            const screenY = (tileY - PY) * tileH + Range * tileW;
+            const drawX = Math.floor(screenX);
+            const drawY = Math.floor(screenY);
+            return drawX === X && drawY === Y;
+        };
 
-                // Teleports (source/target)
-                for (const w of Wormholes?.Teleports || []) {
-                    if (w.X === MapX && w.Y === MapY && window.startingPortalImageReady) {
-                        DrawImageEx(window.startingPortalImage, MainCanvas, X, Y, { Width, Height });
-                    }
+        // Room wormhole tiles
+        for (const w of Wormholes?.Coords || []) {
+            if (tileToScreenMatches(w.X, w.Y) && window.roomWormholeImageReady) {
+                DrawImageEx(window.roomWormholeImage, MainCanvas, X, Y, { Width, Height });
+            }
+        }
 
-                    if (w.TargetX === MapX && w.TargetY === MapY) {
-                        if (w.backWards && window.backwardsPortalImageReady) {
-                            DrawImageEx(window.backwardsPortalImage, MainCanvas, X, Y, { Width, Height });
-                        } else if (!w.backWards && window.targetPortalImageReady) {
-                            DrawImageEx(window.targetPortalImage, MainCanvas, X, Y, { Width, Height });
-                        }
-                    }
+        // Teleport portals
+        for (const w of Wormholes?.Teleports || []) {
+            if (tileToScreenMatches(w.X, w.Y) && window.startingPortalImageReady) {
+                DrawImageEx(window.startingPortalImage, MainCanvas, X, Y, { Width, Height });
+            }
+
+            if (tileToScreenMatches(w.TargetX, w.TargetY)) {
+                if (w.backWards && window.backwardsPortalImageReady) {
+                    DrawImageEx(window.backwardsPortalImage, MainCanvas, X, Y, { Width, Height });
+                } else if (!w.backWards && window.targetPortalImageReady) {
+                    DrawImageEx(window.targetPortalImage, MainCanvas, X, Y, { Width, Height });
                 }
             }
         }
 
-        // No need to call next(), since we drew the tile image ourselves already
+        // No need to call next(), we already drew the tile
     });
 
     //command for registering a coordinate wormhole
