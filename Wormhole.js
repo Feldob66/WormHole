@@ -26,28 +26,28 @@ initGlobalVars();
 
 // Preload Backwards Portal Image
 const backwardsPortalImage = new Image();
-backwardsPortalImage.src = "https://raw.githubusercontent.com/Feldob66/WormHole/refs/heads/main/Wormholesinv.png";
+backwardsPortalImage.src = "https://raw.githubusercontent.com/Feldob66/WormHole/refs/heads/main/Wormholes.png";
 window.backwardsPortalImage = backwardsPortalImage;
 window.backwardsPortalImageReady = false;
 backwardsPortalImage.onload = () => window.backwardsPortalImageReady = true;
 
 // Preload Starting Portal Image
 const startingPortalImage = new Image();
-startingPortalImage.src = "https://raw.githubusercontent.com/Feldob66/WormHole/refs/heads/main/Wormholesinv.png";
+startingPortalImage.src = "https://raw.githubusercontent.com/Feldob66/WormHole/refs/heads/main/Wormholes.png";
 window.startingPortalImage = startingPortalImage;
 window.startingPortalImageReady = false;
 startingPortalImage.onload = () => window.startingPortalImageReady = true;
 
 // Preload Target Portal Image
 const targetPortalImage = new Image();
-targetPortalImage.src = "https://raw.githubusercontent.com/Feldob66/WormHole/refs/heads/main/Wormholesinv.png";
+targetPortalImage.src = "https://raw.githubusercontent.com/Feldob66/WormHole/refs/heads/main/Wormholes.png";
 window.targetPortalImage = targetPortalImage;
 window.targetPortalImageReady = false;
 targetPortalImage.onload = () => window.targetPortalImageReady = true;
 
 // Preload Room Wormhole Image
 const roomWormholeImage = new Image();
-roomWormholeImage.src = "https://raw.githubusercontent.com/Feldob66/WormHole/refs/heads/main/Wormholesinv.png";
+roomWormholeImage.src = "https://raw.githubusercontent.com/Feldob66/WormHole/refs/heads/main/Wormholes.png";
 window.roomWormholeImage = roomWormholeImage;
 window.roomWormholeImageReady = false;
 roomWormholeImage.onload = () => window.roomWormholeImageReady = true;
