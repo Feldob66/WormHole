@@ -646,8 +646,10 @@ function init() {
                 const CenterOffsetX = Range * Width;
                 const CenterOffsetY = Range * Height;
 
-                const MapX = PX + Math.ceil((X - CenterOffsetX) / Width);
-                const MapY = PY + Math.ceil((Y - CenterOffsetY) / Height);
+                // Fixed coordinate calculation - use Math.round() instead of Math.ceil()
+                // This prevents coordinate drift at large perception ranges
+                const MapX = PX + Math.round((X - CenterOffsetX) / Width);
+                const MapY = PY + Math.round((Y - CenterOffsetY) / Height);
 
                 const Wormholes = ChatRoomData?.Custom?.WormholeList;
                 if (!Wormholes) return;
