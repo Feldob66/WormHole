@@ -643,15 +643,11 @@ function init() {
             const PX = Player?.MapData?.Pos?.X;
             const PY = Player?.MapData?.Pos?.Y;
             if (PX != null && PY != null) {
-                // Calculate tile dimensions based on the original math
-                const ViewportWidth = (Range * 2 + 1) * Width;
-                const ViewportHeight = (Range * 2 + 1) * Height;
-                const TileWidth = ViewportWidth / (Range * 2 + 1);
-                const TileHeight = ViewportHeight / (Range * 2 + 1);
-                
                 const CenterOffsetX = Range * Width;
                 const CenterOffsetY = Range * Height;
 
+                // Fixed coordinate calculation - use Math.round() instead of Math.ceil()
+                // This prevents coordinate drift at large perception ranges
                 const MapX = PX + Math.round((X - CenterOffsetX) / Width);
                 const MapY = PY + Math.round((Y - CenterOffsetY) / Height);
 
