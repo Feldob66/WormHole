@@ -326,6 +326,33 @@ function initWait() {
     }
 }
 
+//custom function for patch #1
+function WormholeDraw(mapX, mapY, x, y, width, height) {
+    const Wormholes = ChatRoomData?.Custom?.WormholeList;
+    if (!Wormholes) return;
+    // Room Wormhole (Coord)
+    if (Wormholes?.Coords?.some(w => w.X === mapX && w.Y === mapY) && window.roomWormholeImageReady) {
+        DrawImageEx(window.roomWormholeImage, MainCanvas, x, y, { Width: width, Height: height });
+    }
+    // Teleports (source/target)
+    for (const w of Wormholes?.Teleports || []) {
+        // Source
+        if (w.X === mapX && w.Y === mapY && window.startingPortalImageReady) {
+            DrawImageEx(window.startingPortalImage, MainCanvas, x, y, { Width: width, Height: height });
+        }
+        // Targets
+        if (w.TargetX === mapX && w.TargetY === mapY) {
+            if (w.backWards && window.backwardsPortalImageReady) {
+                // Draw backwards portal
+                DrawImageEx(window.backwardsPortalImage, MainCanvas, x, y, { Width: width, Height: height });
+            } else if (!w.backWards && window.targetPortalImageReady) {
+                // Draw regular target portal
+                DrawImageEx(window.targetPortalImage, MainCanvas, x, y, { Width: width, Height: height });
+            }
+        }
+    }
+}
+
 function init() {
     // Initialize our default settings if they don't exist
     validateWormholeTriggers();
@@ -613,32 +640,6 @@ function init() {
 	    ChatRoomMapViewCalculatePerceptionMasks();
 	    ChatRoomSendLocal(TextGet("MapPasteDone"));
     });
-    //custom function for patch #1
-    function WormholeDraw(mapX, mapY, x, y, width, height) {
-        const Wormholes = ChatRoomData?.Custom?.WormholeList;
-        if (!Wormholes) return;
-        // Room Wormhole (Coord)
-        if (Wormholes?.Coords?.some(w => w.X === mapX && w.Y === mapY) && window.roomWormholeImageReady) {
-            DrawImageEx(window.roomWormholeImage, MainCanvas, x, y, { Width: width, Height: height });
-        }
-        // Teleports (source/target)
-        for (const w of Wormholes?.Teleports || []) {
-            // Source
-            if (w.X === mapX && w.Y === mapY && window.startingPortalImageReady) {
-                DrawImageEx(window.startingPortalImage, MainCanvas, x, y, { Width: width, Height: height });
-            }
-            // Targets
-            if (w.TargetX === mapX && w.TargetY === mapY) {
-                if (w.backWards && window.backwardsPortalImageReady) {
-                    // Draw backwards portal
-                    DrawImageEx(window.backwardsPortalImage, MainCanvas, x, y, { Width: width, Height: height });
-                } else if (!w.backWards && window.targetPortalImageReady) {
-                    // Draw regular target portal
-                    DrawImageEx(window.targetPortalImage, MainCanvas, x, y, { Width: width, Height: height });
-                }
-            }
-        }
-    }
 
     //#1 Map prettify | Draw portal image over Coord or Teleport wormholes
     WH_API.patchFunction("ChatRoomMapViewDrawGrid", {
