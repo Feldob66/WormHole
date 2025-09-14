@@ -1,0 +1,28 @@
+{
+  "name": "wormhole",
+  "version": "0.0.8",
+  "description": "🌌",
+  "homepage": "https://github.com/Feldob66/WormHole#readme",
+  "bugs": {
+    "url": "https://github.com/Feldob66/WormHole/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Feldob66/WormHole.git"
+  },
+  "license": "GPL-2.0",
+  "author": "Felix, Sin, dDeepLb",
+  "type": "module",
+  "main": "Wormhole.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "bc-stubs": "^120.0.0-Beta.1",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "bondage-club-mod-sdk": "^1.2.0",
+    "esbuild": "^0.25.9"
+  }
+}
